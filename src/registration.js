@@ -8,7 +8,7 @@ import {
   VStack,
   ChakraProvider,
 } from '@chakra-ui/react';
-import './auth';
+import {registerWithPassword} from './auth';
 import './bayun';
 
 function Registration() {
@@ -46,7 +46,7 @@ function Registration() {
               name="isCompanyOwnedEmail"
             />
           </FormControl>
-          <Button type="submit" colorScheme="teal" onChange="registerWithoutPassword()">
+          <Button type="submit" colorScheme="teal"  onClick={registerWithPassword}>
             Register
           </Button>
         </form>

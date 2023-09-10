@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Drawer,
   DrawerBody,
@@ -8,10 +8,30 @@ import {
   DrawerCloseButton,
   Button,
   useColorMode,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  Box,
 } from '@chakra-ui/react';
+import { readFileAsText, downloadFile } from './auth';
 
 const UserAccountDrawer = ({ isOpen, onClose }) => {
   const { colorMode, toggleColorMode } = useColorMode();
+
+  const fileInputRef = useRef(null);
+
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    setSelectedFile(file);
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
 
   return (
     <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
@@ -21,9 +41,50 @@ const UserAccountDrawer = ({ isOpen, onClose }) => {
         <DrawerHeader>User Account</DrawerHeader>
 
         <DrawerBody>
-          <Button colorScheme="teal" w="100%" mb={3}>
-            Lock Health Reports
+          <input
+            type="file"
+            accept=".pdf, .jpg, .png"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+            ref={fileInputRef}
+            id="file"
+          />
+
+          {selectedFile ? (
+            <Alert status="success" mb={4}>
+              <AlertIcon />
+              <Box flex="1">
+                <AlertTitle>Your file was successfully uploaded:</AlertTitle>
+                {selectedFile.name}
+              </Box>
+            </Alert>
+          ) : (
+            <Button
+              colorScheme="teal"
+              w="100%"
+              mb={3}
+              onClick={triggerFileInput}
+            >
+              Upload Health Report
+            </Button>
+          )}
+
+          <Button
+            colorScheme="teal"
+            w="100%"
+            mb={3}
+            onClick={downloadFile}
+            isDisabled={!selectedFile}
+            style={{
+              backgroundColor: 'teal',
+              color: 'white',
+              fontWeight: 'bold',
+              _hover: { backgroundColor: 'teal.600' },
+            }}
+          >
+            {selectedFile ? 'Download Locked File' : 'Select a File First'}
           </Button>
+
           <Button colorScheme="teal" w="100%" mb={3}>
             Health Assistant
           </Button>

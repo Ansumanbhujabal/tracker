@@ -1,3 +1,8 @@
+import './bayun.js';
+import { useHistory } from 'react-router-dom';
+import PeriodTrackerApp from './PeriodTrackerApp.js';
+
+
 /**
  * localStorageMode : It can be SESSION_MODE or EXPLICIT_LOGOUT_MODE
       SESSION_MODE : User data is encrypted and stored locally in sessionstorage. User data gets cleared when the page session ends and user will have to login with Bayun again.
@@ -18,11 +23,11 @@
 
       const Constants = {
   
-        BAYUN_APP_ID: "", 
-        BAYUN_APP_SALT: "", 
-        BAYUN_APP_SECRET: "", 
+        BAYUN_APP_ID: "3b9851a557914843b0a368d51809d6fa", 
+        BAYUN_APP_SALT: "aklCMa/IqOJ0LbVW9JRF+04uph6B3KELKOG1+WQDq10=", 
+        BAYUN_APP_SECRET: "b4388d05b03d4516bc3222c34c308d52", 
         ENABLE_FACE_RECOGNITION: false,
-        BASE_URL:"", 
+        BASE_URL:"https://www.digilockbox.com/", 
       };
       
       var localStorageMode = window.BayunCore.LocalDataEncryptionMode.SESSION_MODE;
@@ -91,24 +96,24 @@
        */
        var sessionId = "";
        var roomId = "";
-      // const registerSuccessCallback = (data) => {
-      //   console.log("onRegisterSuccess");
-      //   if (data.employeeAlreadyExists) {
-      //     console.error(ErrorConstants.EMPLOYEE_ALREADY_EXISTS);
-      //     alert(ErrorConstants.EMPLOYEE_ALREADY_EXISTS);
-      //     return;
-      //   }
-      //   if (data.sessionId) {
-      //     alert("Registered Successfully. Please login to continue.");
-      //     // registerContainer.classList.add("hidden");
-      //     bayunCore.logout(getCookie("sessionId"));
-      //     console.log("sessionID: ",data.sessionId);
-      //     sessionId = data.sessionId;
-      //     clearSessionData();
-      //     // showLoginScreen();
+      const registerSuccessCallback = (data) => {
+        console.log("onRegisterSuccess");
+        if (data.employeeAlreadyExists) {
+          console.error(window.ErrorConstants.EMPLOYEE_ALREADY_EXISTS);
+          alert(window.ErrorConstants.EMPLOYEE_ALREADY_EXISTS);
+          return;
+        }
+        if (data.sessionId) {
+          alert("Registered Successfully. Please login to continue.");
+          // registerContainer.classList.add("hidden");
+          bayunCore.logout(getCookie("sessionId"));
+          console.log("sessionID: ",data.sessionId);
+          sessionId = data.sessionId;
+          clearSessionData();
+          // showLoginScreen();
       
-      //   }
-      // };
+        }
+      };
       
       /**
        * registerFailureCallback executes after failure in registration of employee flow
@@ -156,8 +161,28 @@
           setCookie("localStorageMode", localStorageMode, 30);
           console.log("sessionId: ",sessionId);
           console.log("login success");
+
         }
       };
+
+      export {onLoginSuccessCallback};
+
+
+      // const onLoginSuccessCallback = async (data, history) => {
+      //   console.log("data = ", data);
+      //   if (data.sessionId) {
+      //     window.sessionId = data.sessionId;
+      //     sessionId = data.sessionId;
+      //     setCookie("sessionId", data.sessionId, 30);
+      //     setCookie("localStorageMode", localStorageMode, 30);
+      //     console.log("sessionId: ", sessionId);
+      //     console.log("login success");
+      
+      //     history.push('/PeriodTrackerApp');
+      //   }
+      // };
+      
+
       
       /**
        * onLoginFailureCallback executes after failure in login of employee flow
@@ -174,27 +199,27 @@
        * This callback will be called when, the authorization of an employee is pending.
        * @param {Any} data Data requried to authorize an employee.
        */
-      // const authorizeEmployeeCallback = (data) => {
-      //   console.log("In authorizeEmployeeCallback");
-      //   if (data.sessionId) {
-      //     if (
-      //       data.authenticationResponse ==
-      //       BayunCore.AuthenticateResponse.AUTHORIZATION_PENDING
-      //     ) {
-      //       // You will get employeePublicKey on data.employeePublicKey
-      //       console.log(data);
-      //       bayunCore.authorizeEmployee(
-      //         data.sessionId,
-      //         data.employeePublicKey,
-      //         // companyName,
-      //         // companyEmployeeId,
-      //         onLoginSuccessCallback,
-      //         onLoginFailureCallback
-      //       );
-      //       console.log("after call");
-      //     }
-      //   }
-      // };
+      const authorizeEmployeeCallback = (data) => {
+        console.log("In authorizeEmployeeCallback");
+        if (data.sessionId) {
+          if (
+            data.authenticationResponse ==
+            window.BayunCore.AuthenticateResponse.AUTHORIZATION_PENDING
+          ) {
+            // You will get employeePublicKey on data.employeePublicKey
+            console.log(data);
+            bayunCore.authorizeEmployee(
+              data.sessionId,
+              data.employeePublicKey,
+              // companyName,
+              // companyEmployeeId,
+              onLoginSuccessCallback,
+              onLoginFailureCallback
+            );
+            console.log("after call");
+          }
+        }
+      };
       
       /**
        * Function changePassword which takes input as old password and new password and change it to new one.
@@ -231,17 +256,20 @@
         * @param {Callback} authorizeEmployeeCallback Block to be executed if employee public key authorization is pending, returns employeePublicKey.
         * @see https://bayun.gitbook.io/bayuncoresdk-javascript-programming-guide/3-authentication/4.1-register-with-password
         **/
-    //   async function registerWithPassword() {
-    //     await bayunCore.registerEmployeeWithPassword(
-    //       getCookie("sessionId"), //window.sessionId,
-    //       companyName,
-    //       companyEmployeeId,
-    //       password,
-    //       authorizeEmployeeCallback,
-    //       registerSuccessCallback,
-    //       registerFailureCallback
-    //     );
-    //   }
+      async function registerWithPassword() {
+        await bayunCore.registerEmployeeWithPassword(
+          getCookie("sessionId"), //window.sessionId,
+          companyName,
+          companyEmployeeId,
+          password,
+          authorizeEmployeeCallback,
+          registerSuccessCallback,
+          registerFailureCallback
+        );
+      }
+
+      export {registerWithPassword};
+
       
       /**
          * The loginWithPassword function is the instance function that initialises your access to Bayun. 
@@ -271,6 +299,9 @@
           onLoginFailureCallback
         );
       }
+
+
+      export {loginWithPassword};
       
       /**
          * Register Employee Without Password.
@@ -323,7 +354,7 @@
           companyEmployeeId,
           null,
           null,
-          // onLoginSuccessCallback,
+          onLoginSuccessCallback,
           onLoginFailureCallback
         );
       }
@@ -532,21 +563,21 @@
          * @param {KeyGenerationPolicy} keyGenerationPolicy : BayunKeyGenerationPolicy determines the policy to generate the lockingKey.
          * @see https://bayun.gitbook.io/bayuncoresdk-javascript-programming-guide/bayuncoresdk-operations/lock-unlock-text#5.1.1-lock-text
          */
-    //   async function lockText(
-    //     sessionId,
-    //     text,
-    //     encryptionPolicy,
-    //     keyGenerationPolicy
-    //   ) {
-    //     var lockedText = await bayunCore.lockText(
-    //       sessionId,
-    //       text,
-    //       encryptionPolicy,
-    //       keyGenerationPolicy
-    //     );
-    //     console.log("lockedText = ", lockedText);
-    //     return lockedText;
-    //   }
+      async function lockText(
+        sessionId,
+        text,
+        encryptionPolicy,
+        keyGenerationPolicy
+      ) {
+        var lockedText = await bayunCore.lockText(
+          sessionId,
+          text,
+          encryptionPolicy,
+          keyGenerationPolicy
+        );
+        console.log("lockedText = ", lockedText);
+        return lockedText;
+      }
       
       /**
          * The unlockText function unlocks a locked text. 
@@ -570,23 +601,23 @@
          * @param {KeyGenerationPolicy} keyGenerationPolicy : BayunKeyGenerationPolicy determines the policy to generate the lockingKey.
          * @see https://bayun.gitbook.io/bayuncoresdk-javascript-programming-guide/bayuncoresdk-operations/lock-unlock-binary-data#5.2.2-lock-file-text
          */
-    //   async function lockTextForImage(
-    //     sessionId,
-    //     text,
-    //     encryptionPolicy,
-    //     keyGenerationPolicy,
-    //     groupId
-    //   ) {
-    //     var lockedText = await bayunCore.lockFileText(
-    //       sessionId,
-    //       text,
-    //       encryptionPolicy,
-    //       keyGenerationPolicy,
-    //       groupId
-    //     );
-    //     console.log("lockedText = ", lockedText);
-    //     return lockedText;
-    //   }
+      async function lockTextForImage(
+        sessionId,
+        text,
+        encryptionPolicy,
+        keyGenerationPolicy,
+        groupId
+      ) {
+        var lockedText = await bayunCore.lockFileText(
+          sessionId,
+          text,
+          encryptionPolicy,
+          keyGenerationPolicy,
+          groupId
+        );
+        console.log("lockedText = ", lockedText);
+        return lockedText;
+      }
       
       /**
          * The unlockFileText function unlocks a locked file data as text.
@@ -595,10 +626,10 @@
          * @param {String} text Text to be unlocked.
          * @see https://bayun.gitbook.io/bayuncoresdk-javascript-programming-guide/bayuncoresdk-operations/lock-unlock-binary-data#5.2.4-unlock-file-text
          */
-    //   async function unlockTextForImage(sessionId, text) {
-    //     var unlockedText = await bayunCore.unlockFileText(sessionId, text);
-    //     return unlockedText;
-    //   }
+      async function unlockTextForImage(sessionId, text) {
+        var unlockedText = await bayunCore.unlockFileText(sessionId, text);
+        return unlockedText;
+      }
       
       /**
          * This function locks and unlocks users data.
@@ -640,123 +671,130 @@
          * @param {String} groupId  GroupId is required if encryptionPolicy is GROUP. 
          * @see https://bayun.gitbook.io/bayuncoresdk-javascript-programming-guide/bayuncoresdk-operations/get-locking-key
          */
-    //   async function getLockingKey(
-    //     sessionId,
-    //     encryptionPolicy,
-    //     keyGenerationPolicy,
-    //     groupId
-    //   ) {
-    //     var getLockingKey = await bayunCore.getLockingKey(
-    //       sessionId,
-    //       encryptionPolicy,
-    //       keyGenerationPolicy,
-    //       groupId
-    //     );
-    //     console.log(getLockingKey);
-    //   }
+      async function getLockingKey(
+        sessionId,
+        encryptionPolicy,
+        keyGenerationPolicy,
+        groupId
+      ) {
+        var getLockingKey = await bayunCore.getLockingKey(
+          sessionId,
+          encryptionPolicy,
+          keyGenerationPolicy,
+          groupId
+        );
+        console.log(getLockingKey);
+      }
       
       /**
        * Function executes when user selects a image from device, after that locking and unlocking of image starts.
        */
-      //var metaData = "";
-    //   let fileInfoObject = {"fileText":"","metaData": ""};
-    //   async function readFileAsText(){
-    //       var file = document.getElementById("file").files[0];
-    //       var reader = new FileReader();
-    //       reader.readAsDataURL(file);
-    //       //console.log("name ",file.name);
-    //       reader.onload = function () {
-    //         var inputData = reader.result;
-    //         console.log("inputData = ", inputData);
-    //         var replaceValue = inputData.split(",")[0];
-    //         console.log("replaceValue ",replaceValue); //data:application/pdf;base64
-    //         var metaData = replaceValue;
-    //         var fileText = inputData.replace(replaceValue + ",", "");
-    //         fileInfoObject = {
-    //           "fileText":fileText,
-    //           "metaData":metaData
-    //         }
-    //         lockAndUnlockForImageTest(fileText);
-    //       };
-    //     }
+      var metaData = "";
+      let fileInfoObject = {"fileText":"","metaData": ""};
+      async function readFileAsText(){
+          var file = document.getElementById("file").files[0];
+          var reader = new FileReader();
+          reader.readAsDataURL(file);
+          //console.log("name ",file.name);
+          reader.onload = function () {
+            var inputData = reader.result;
+            console.log("inputData = ", inputData);
+            var replaceValue = inputData.split(",")[0];
+            console.log("replaceValue ",replaceValue); //data:application/pdf;base64
+            var metaData = replaceValue;
+            var fileText = inputData.replace(replaceValue + ",", "");
+            fileInfoObject = {
+              "fileText":fileText,
+              "metaData":metaData
+            }
+            window.lockAndUnlockForImageTest(fileText);
+          };
+        }
       
-    //   let unlocked_Text ="";
-    //   async function unlockLockedImage(){
-    //     var file = document.getElementById("lockedFile").files[0];
-    //     var reader = new FileReader();
-    //     reader.readAsDataURL(file);
-    //     reader.onload = async function () {
-    //       var inputData = reader.result;
-    //       console.log("inputData = ", inputData);
-    //       var metaData = inputData.split(",")[0];
-    //       var fileText = inputData.replace(metaData + ",", "");
-    //       //lockAndUnlockForImageTest(fileText);
-    //       //console.log("fileText",fileText);
-    //       fileInfoObject = {
-    //         "fileText":fileText,
-    //         "metaData":metaData
-    //       }
-    //       unlocked_Text = await unlockTextForImage("<sessionId>", fileText);
-    //       console.log("unlockedText",unlocked_Text);
-    //     };
-    //   }
+      let unlocked_Text ="";
+      async function unlockLockedImage(){
+        var file = document.getElementById("lockedFile").files[0];
+        var reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async function () {
+          var inputData = reader.result;
+          console.log("inputData = ", inputData);
+          var metaData = inputData.split(",")[0];
+          var fileText = inputData.replace(metaData + ",", "");
+          //lockAndUnlockForImageTest(fileText);
+          //console.log("fileText",fileText);
+          fileInfoObject = {
+            "fileText":fileText,
+            "metaData":metaData
+          }
+          unlocked_Text = await unlockTextForImage("<sessionId>", fileText);
+          console.log("unlockedText",unlocked_Text);
+        };
+      }
+
+      export {readFileAsText};
       
       /**
        * This function is the combination of lockTextForImage and unlockTextForImage
        * @param textToLock Text to be locked
        */
-      //let unlocked_Text ="";
-    //   async function lockAndUnlockForImageTest(textToLock) {
+      // let unlocked_Text ="";
+      // async function lockAndUnlockForImageTest(textToLock) {
       
-    //     var start = window.performance.now();
+      //   var start = window.performance.now();
       
-    //     let lockedText = await lockTextForImage(
-    //       "<sessionId>",
-    //       textToLock,
-    //       BayunCore.EncryptionPolicy.GROUP,
-    //       BayunCore.KeyGenerationPolicy.ENVELOPE,
-    //       "GroupId"
-    //     );
-    //     console.log("Encryption Successful");
+      //   let lockedText = await lockTextForImage(
+      //     "<sessionId>",
+      //     textToLock,
+      //     BayunCore.EncryptionPolicy.GROUP,
+      //     BayunCore.KeyGenerationPolicy.ENVELOPE,
+      //     "GroupId"
+      //   );
+      //   console.log("Encryption Successful");
        
-    //     var end = window.performance.now();
-    //     console.log(`Encryption Execution time: ${end - start} ms`);
+      //   var end = window.performance.now();
+      //   console.log(`Encryption Execution time: ${end - start} ms`);
       
-    //     //for downloading locked image
-    //     await writeFileTextToFile(lockedText,fileInfoObject.metaData);
-    //     console.log("Encrypted image downloaded");
+      //   //for downloading locked image
+      //   await writeFileTextToFile(lockedText,fileInfoObject.metaData);
+      //   console.log("Encrypted image downloaded");
       
       
-    //     var start1 = window.performance.now();
+      //   var start1 = window.performance.now();
       
-    //     unlocked_Text = await unlockTextForImage("<sessionId>", lockedText);
-    //     console.log("unlockedText",unlocked_Text);
-    //     console.log("Decryption Successful");
+      //   unlocked_Text = await unlockTextForImage("<sessionId>", lockedText);
+      //   console.log("unlockedText",unlocked_Text);
+      //   console.log("Decryption Successful");
       
-    //     var end1 = window.performance.now();
-    //     console.log(`Decryption Execution time: ${end1 - start1} ms`);
+      //   var end1 = window.performance.now();
+      //   console.log(`Decryption Execution time: ${end1 - start1} ms`);
       
-    //   }
+      // }
       
       /**
        * Function used to download a image.
        * @param {Any} data Data of image
        * @param {String} filename Name of the file
        */
-    //   async function writeFileTextToFile(fileText,metaData) {
-    //     var a = document.createElement("a");
-    //     a.href = metaData + "," + fileText;
-    //     var extension = metaData.substring(metaData.indexOf('/')+1,metaData.indexOf(';'));
-    //     a.download = "fileName" + "." + extension; //File name Here
-    //     a.click();
-    //   }
+      async function writeFileTextToFile(fileText,metaData) {
+        var a = document.createElement("a");
+        a.href = metaData + "," + fileText;
+        var extension = metaData.substring(metaData.indexOf('/')+1,metaData.indexOf(';'));
+        a.download = "fileName" + "." + extension; //File name Here
+        a.click();
+      }
       
       /**
        * Function called when download button is clicked
        */
-    //   function downloadFile() {
-    //     writeFileTextToFile(unlocked_Text,fileInfoObject.metaData);
-    //   }
+      function downloadFile() {
+        writeFileTextToFile(unlocked_Text,fileInfoObject.metaData);
+      }
+
+
+      export {downloadFile};
+
+
       /*Image test finish here*/
       
       var companyName = "company.com";
@@ -768,8 +806,8 @@
        * Function basicApplicationFlow explains a simple application execution flow
        */
       async function basicApplicationFlow(){
-        await registerWithoutPassword();
-        await loginWithoutPassword();
+        // await registerWithoutPassword();
+        // await loginWithPassword();
         // await registerWithPassword();
         // await createGroup(sessionId,"<GroupName>", BayunCore.GroupType.PRIVATE);
         // await getMyGroups(sessionId);
@@ -782,3 +820,9 @@
       
       setCookie("sessionId", "", 30);
       initBayunCore(); 
+
+      // registerWithPassword();
+      loginWithPassword();
+      // lockAndUnlockData();
+      // getLockingKey();
+    
